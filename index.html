@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Dpproj1 : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Dpproj1</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/maymaomao/dpProj1">View on GitHub</a>
+
+          <h1 id="project_title">Dpproj1</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/maymaomao/dpProj1/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/maymaomao/dpProj1/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <hr>
+
+<p>title       : baby names in Irish
+subtitle    : 
+author      : LvMei
+job         : 
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax, quiz, bootstrap]            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}</p>
+
+<h2>
+<a id="knit---------slidifyknit2slides" class="anchor" href="#knit---------slidifyknit2slides" aria-hidden="true"><span class="octicon octicon-link"></span></a>knit        : slidify::knit2slides</h2>
+
+<h2>
+<a id="why-baby-names" class="anchor" href="#why-baby-names" aria-hidden="true"><span class="octicon octicon-link"></span></a>Why Baby Names???</h2>
+
+<p>Many expecting parents spend days deliberating on what's a good name for their baby. The criteria for this differs from person to person but most people like traditional names that are not too common. By using this applet, parents can see the most popular names for any given year and see how it trends with time.</p>
+
+<p>Another potential use is for people to link noticeable peaks and valleys in a name's popularity with pop culture events.</p>
+
+<p>--- .class #id </p>
+
+<h2>
+<a id="data" class="anchor" href="#data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data</h2>
+
+<p>The data was downloaded and pre-processed into a useful format using R and a px package.</p>
+
+<pre lang="r,"><code>library(ggplot2)
+library(pxR)
+
+# load the data sets
+boys  &lt;- read.px(".\\data\\boys.px")
+girls &lt;- read.px(".\\data\\girls.px")
+
+# Function to pre-process the data
+preProcess &lt;- function(sex){
+
+  # extract the relevant information based on user choice
+  if (sex == "boys"){
+    data &lt;- boys$DATA$value
+  }
+  if (sex == "girls"){
+    data &lt;- girls$DATA$value
+  }
+
+  # Convert the dataframe into a long format manually
+  l &lt;- length(data$value)
+
+  # initialize empty vector to hold amounts
+  amount &lt;- c()
+
+  # If the row is odd then add the next row's value to it
+  for (i in 1:l){
+    if (i%%2 == 1){
+      amount &lt;- c(amount, data$value[i+1])
+    }
+  }
+
+  # append the amount to the rank row
+  DF &lt;- with(data, subset(data, Statistic == "Rank of Name in Ireland (Number)"))
+  DF$amount &lt;- amount
+  DF$Statistic &lt;- NULL
+  names(DF) &lt;- c("Year", "Name", "Rank", "Amount")
+  DF
+}
+
+# pre-process both the data sets
+boys_data &lt;- preProcess("boys")
+girls_data &lt;- preProcess("girls")
+
+getNames &lt;- function(sex, n, year) {
+
+  # extract the relevant information based on user choice
+  if (sex == "boys"){
+    data &lt;- boys_data
+  }
+  if (sex == "girls"){
+    data &lt;- girls_data
+  }
+
+  # get the names for the top n ranks for a specific year
+  DF &lt;- with(data, subset(data, Year == year &amp; Rank %in% c(1:n)))
+  names &lt;- DF$Name
+
+  # subset all years with this filter
+  DF1 &lt;- with(data, subset(data, Name %in% names))
+
+  # Plot the graph
+  p1 &lt;- ggplot(data = DF1, aes(x = Year, y = Amount, fill = Name))
+
+  # This is necessary since you want one line per samples rather than for each data point
+  p1 + geom_line(aes(colour = Name, group = Name)) + 
+    labs(title = 'Most Popular Baby Names 1998 - 2013',
+         y = 'Number of babies', x = 'Year', fill = 'Name')
+}
+</code></pre>
+
+<div class="highlight highlight-r"><pre>head(<span class="pl-vo">boys_data</span>)</pre></div>
+
+<p>--- .class #id </p>
+
+<h2>
+<a id="using-the-app" class="anchor" href="#using-the-app" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using the App</h2>
+
+<p><img src="myapp.png" alt='"app""'>
+Specifiy the following using slider bars &amp; dropdown box:</p>
+
+<ul>
+<li>Year</li>
+<li>Number of names</li>
+<li>Sex</li>
+</ul>
+
+<p>--- .class #id </p>
+
+<h2>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span class="octicon octicon-link"></span></a>About</h2>
+
+<p>This applet was made as a project for Coursera's class on Developing Data Products. </p>
+
+<p>It uses data available from the Central Statistics Office in order to generate graphs on the most popular baby names in Ireland for specific years.</p>
+
+<p>It was written in R and hosted by shiny apps at <a href="http://maymaomao.shinyapps.io/dpProj1/">http://maymaomao.shinyapps.io/dpProj1/</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Dpproj1 maintained by <a href="https://github.com/maymaomao">maymaomao</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
